@@ -1,0 +1,26 @@
+{
+  "name": "serializer",
+  "version": "1.0.0",
+  "description": "JSON Class Serializer",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "npm run development",
+    "development": "cross-env NODE_ENV=development node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
+    "watch": "cross-env NODE_ENV=development node_modules/webpack/bin/webpack.js --watch --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
+    "watch-poll": "npm run watch -- --watch-poll",
+    "prod": "npm run production",
+    "production": "cross-env NODE_ENV=production node_modules/webpack/bin/webpack.js --no-progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js"
+  },
+  "keywords": [
+    "json",
+    "class",
+    "serialization",
+    "es6"
+  ],
+  "author": "Dmitry Kopytov (doomer.net@gmail.com)",
+  "license": "DWTFYWWI",
+  "devDependencies": {
+    "cross-env": "^5.1.6",
+    "laravel-mix": "^2.1.11"
+  }
+}
