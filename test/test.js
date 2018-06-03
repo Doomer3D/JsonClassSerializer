@@ -100,34 +100,34 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 
-//{
-//    console.log('****************************************************************');
-//    console.log('* СЕРИАЛИЗАЦИЯ С ПОМОЩЬЮ ИНТЕРФЕЙСА                            *');
-//    console.log('****************************************************************');
+{
+    console.log('****************************************************************');
+    console.log('* СЕРИАЛИЗАЦИЯ С ПОМОЩЬЮ ИНТЕРФЕЙСА                            *');
+    console.log('****************************************************************');
 
-//    // пример: firebrick (#b22222)
-//    let color = Color.fromRGB(178, 34, 34);
+    // пример: firebrick (#b22222)
+    var color = __WEBPACK_IMPORTED_MODULE_2__color__["a" /* default */].fromRGB(178, 34, 34);
 
-//    // создаем сериализатор
-//    let serializer = new Serializer();
+    // создаем сериализатор
+    var serializer = new __WEBPACK_IMPORTED_MODULE_0__src__["default"]();
 
-//    // регистрируем классы
-//    serializer.register(Color);
+    // регистрируем классы
+    serializer.register(__WEBPACK_IMPORTED_MODULE_2__color__["a" /* default */]);
 
-//    // выводим в консоль
-//    console.log('Исходный цвет:');
-//    console.log(color);
+    // выводим в консоль
+    console.log('Исходный цвет:');
+    console.log(color);
 
-//    // сериализация
-//    let json = serializer.serialize(color, null, 2);
-//    console.log('JSON:');
-//    console.log(json);
+    // сериализация
+    var json = serializer.serialize(color, null, 2);
+    console.log('JSON:');
+    console.log(json);
 
-//    // десериализация
-//    let color2 = serializer.deserialize(json);
-//    console.log('Десериализованный цвет:');
-//    console.log(color2);
-//}
+    // десериализация
+    var color2 = serializer.deserialize(json);
+    console.log('Десериализованный цвет:');
+    console.log(color2);
+}
 
 {
     console.log('****************************************************************');
@@ -149,122 +149,117 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
     };
 
     // создаем сериализатор
-    var serializer = new __WEBPACK_IMPORTED_MODULE_0__src__["default"]();
+    var _serializer = new __WEBPACK_IMPORTED_MODULE_0__src__["default"]();
 
     // регистрируем классы
-    serializer.register(Date);
+    _serializer.register(Date);
 
     // выводим в консоль
     console.log('Исходная дата:');
     console.log(source);
 
     // сериализация
-    var json = serializer.serialize(source, null, 2);
+    var _json = _serializer.serialize(source, null, 2);
     console.log('JSON:');
-    console.log(json);
+    console.log(_json);
 
     // десериализация
-    var back = serializer.deserialize(json);
+    var back = _serializer.deserialize(_json);
     console.log('Десериализованная дата:');
     console.log(back);
 }
 
-//{
-//    console.log('****************************************************************');
-//    console.log('* СЕРИАЛИЗАЦИЯ ПРОСТЫХ ОБЪЕКТОВ СО ССЫЛКАМИ                    *');
-//    console.log('****************************************************************');
+{
 
-//    /**
-//     * простой класс через функцию
-//     * @param {stringany} name имя объекта
-//     * @param {MyClass} target целевой объект
-//     */
-//    function MyClass(name, target) {
-//        this.name = name;
-//        this.target = target;
-//    }
+    /**
+     * простой класс через функцию
+     * @param {stringany} name имя объекта
+     * @param {MyClass} target целевой объект
+     */
+    var MyClass = function MyClass(name, target) {
+        this.name = name;
+        this.target = target;
+    };
 
-//    let a = new MyClass('Объект A');
-//    let b = new MyClass('Объект B', a);
-//    a.target = b;
+    console.log('****************************************************************');
+    console.log('* СЕРИАЛИЗАЦИЯ ПРОСТЫХ ОБЪЕКТОВ СО ССЫЛКАМИ                    *');
+    console.log('****************************************************************');
 
-//    let source = [a, b];
+    var a = new MyClass('Объект A');
+    var b = new MyClass('Объект B', a);
+    a.target = b;
 
-//    // создаем сериализатор
-//    let serializer = new Serializer();
+    var _source = [a, b];
 
-//    // регистрируем классы
-//    serializer.register(MyClass);
+    // создаем сериализатор
+    var _serializer2 = new __WEBPACK_IMPORTED_MODULE_0__src__["default"]();
 
-//    // выводим в консоль
-//    console.log('Исходные данные:');
-//    console.log(source);
+    // регистрируем классы
+    _serializer2.register(MyClass);
 
-//    // сериализация
-//    let json = serializer.serialize(source, null, 2);
-//    console.log('JSON:');
-//    console.log(json);
+    // выводим в консоль
+    console.log('Исходные данные:');
+    console.log(_source);
 
-//    // десериализация
-//    let back = serializer.deserialize(json);
-//    console.log('Десериализованные данные:');
-//    console.log(back);
-//}
+    // сериализация
+    var _json2 = _serializer2.serialize(_source, null, 2);
+    console.log('JSON:');
+    console.log(_json2);
 
-//{
-//    console.log('****************************************************************');
-//    console.log('* СЕРИАЛИЗАЦИЯ СЛОЖНЫХ ОБЪЕКТОВ СО ССЫЛКАМИ                    *');
-//    console.log('****************************************************************');
+    // десериализация
+    var _back = _serializer2.deserialize(_json2);
+    console.log('Десериализованные данные:');
+    console.log(_back);
+}
 
-//    // создаем схему
-//    let start = new Schema.Start();
-//    let input = new Schema.Command('Ввод A, B');
-//    let check = new Schema.If('A > B');
-//    let maxIsA = new Schema.Let('Max', 'A');
-//    let maxIsB = new Schema.Let('Max', 'B');
-//    let output = new Schema.Command('Вывод Max');
-//    let finish = new Schema.Finish();
+{
+    console.log('****************************************************************');
+    console.log('* СЕРИАЛИЗАЦИЯ СЛОЖНЫХ ОБЪЕКТОВ СО ССЫЛКАМИ                    *');
+    console.log('****************************************************************');
 
-//    // настраиваем связи
-//    start.addLink(input);
-//    input.addLink(check);
-//    check.addLink(maxIsA, { condition: 'true' });
-//    check.addLink(maxIsB, { condition: 'false' });
-//    maxIsA.addLink(output);
-//    maxIsB.addLink(output);
-//    output.addLink(finish);
+    // создаем схему
+    var start = new __WEBPACK_IMPORTED_MODULE_1__schema__["a" /* default */].Start();
+    var input = new __WEBPACK_IMPORTED_MODULE_1__schema__["a" /* default */].Command('Ввод A, B');
+    var check = new __WEBPACK_IMPORTED_MODULE_1__schema__["a" /* default */].If('A > B');
+    var maxIsA = new __WEBPACK_IMPORTED_MODULE_1__schema__["a" /* default */].Let('Max', 'A');
+    var maxIsB = new __WEBPACK_IMPORTED_MODULE_1__schema__["a" /* default */].Let('Max', 'B');
+    var output = new __WEBPACK_IMPORTED_MODULE_1__schema__["a" /* default */].Command('Вывод Max');
+    var finish = new __WEBPACK_IMPORTED_MODULE_1__schema__["a" /* default */].Finish();
 
-//    // собираем объект схемы (массив вершин)
-//    let schema = [
-//        start,
-//        input,
-//        check,
-//        maxIsA,
-//        maxIsB,
-//        output,
-//        finish
-//    ];
+    // настраиваем связи
+    start.addLink(input);
+    input.addLink(check);
+    check.addLink(maxIsA, { condition: 'true' });
+    check.addLink(maxIsB, { condition: 'false' });
+    maxIsA.addLink(output);
+    maxIsB.addLink(output);
+    output.addLink(finish);
 
-//    // выводим в консоль
-//    console.log('Исходная схема:');
-//    console.log(schema);
+    // собираем объект схемы (массив вершин)
+    var schema = [start, input, check, maxIsA, maxIsB, output, finish];
 
-//    // создаем сериализатор
-//    let serializer = new Serializer();
+    // выводим в консоль
+    console.log('Исходная схема:');
+    console.log(schema);
 
-//    // регистрируем классы
-//    Object.keys(Schema).forEach(key => serializer.register(`Schema.${key}`, Schema[key]));
+    // создаем сериализатор
+    var _serializer3 = new __WEBPACK_IMPORTED_MODULE_0__src__["default"]();
 
-//    // сериализация
-//    let json = serializer.serialize(schema, null, 2);
-//    console.log('JSON:');
-//    console.log(json);
+    // регистрируем классы
+    Object.keys(__WEBPACK_IMPORTED_MODULE_1__schema__["a" /* default */]).forEach(function (key) {
+        return _serializer3.register('Schema.' + key, __WEBPACK_IMPORTED_MODULE_1__schema__["a" /* default */][key]);
+    });
 
-//    // десериализация
-//    let schema2 = serializer.deserialize(json);
-//    console.log('Десериализованная схема:');
-//    console.log(schema2);
-//}
+    // сериализация
+    var _json3 = _serializer3.serialize(schema, null, 2);
+    console.log('JSON:');
+    console.log(_json3);
+
+    // десериализация
+    var schema2 = _serializer3.deserialize(_json3);
+    console.log('Десериализованная схема:');
+    console.log(schema2);
+}
 
 /***/ }),
 /* 5 */
@@ -449,7 +444,7 @@ var If = function (_Node5) {
     return If;
 }(Node);
 
-/* unused harmony default export */ var _unused_webpack_default_export = ({
+/* harmony default export */ __webpack_exports__["a"] = ({
     Command: Command,
     Finish: Finish,
     If: If,
@@ -1011,7 +1006,7 @@ var Color = function () {
     return Color;
 }();
 
-/* unused harmony default export */ var _unused_webpack_default_export = (Color);
+/* harmony default export */ __webpack_exports__["a"] = (Color);
 
 /***/ })
 /******/ ]);
