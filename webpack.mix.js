@@ -1,5 +1,6 @@
 const { mix } = require('laravel-mix');
 
 mix
-    .setPublicPath('dist')
-    .js('src/index.js', 'dist/js');
+    .setPublicPath('.')
+    .js('src/index.js', 'dist/js')
+    .js('test-src/index.js', 'test/test.js');

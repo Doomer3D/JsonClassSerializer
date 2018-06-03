@@ -19,6 +19,15 @@ function isString(value) {
 }
 
 /**
+ * проверить, что переменная является целым числом
+ * @param {any} value переменная
+ * @returns {boolean} результат проверки
+ */
+function isInteger(value) {
+    return !isString(value) && parseInt(value) === value;
+}
+
+/**
  * контекст сериализации
  */
 class SerializationContext {
@@ -38,15 +47,17 @@ class SerializationContext {
      * @returns {string} строка
      */
     serialize(val) {
-        if (/*val instanceof $ ||*/ val instanceof Element) {
-            // несериализуемые элементы - JQuery и DOM
-            return undefined;
-        } else if (Array.isArray(val)) {
+        if (Array.isArray(val)) {
             // массив
             return this.serializeArray(val);
         } else if (isObject(val)) {
             // объект
-            return this.serializeObject(val);
+            if (this._ignore.some(e => val instanceof e)) {
+                // игнорируемый тип
+                return undefined;
+            } else {
+                return this.serializeObject(val);
+            }
         } else {
             // прочие значения
             return val;
@@ -61,7 +72,8 @@ class SerializationContext {
     serializeArray(val) {
         let res = [];
         for (let item of val) {
-            res.push(this.serialize(item));
+            let e = this.serialize(item);
+            if (typeof e !== 'undefined') res.push(e);
         }
         return res;
     }
@@ -91,10 +103,19 @@ class SerializationContext {
                 // возвращаем ссылку на объект
                 return { [`@${name}`]: cached.index };
             } else {
+                let res;
                 let cached = { ref: { [`@${name}`]: {} } };
                 this.cache[val.__uuid] = cached;
-                let res = this.serializeObjectInner(val);
+
+                if (typeof val.serialize === 'function') {
+                    // класс реализует интерфейс сериализации
+                    res = val.serialize();
+                } else {
+                    // обычная сериализация
+                    res = this.serializeObjectInner(val);
+                }
                 cached.ref[Object.keys(cached.ref)[0]] = res;
+
                 return cached.ref;
             }
         } else {
@@ -171,7 +192,17 @@ class DeserializationContext {
             let data = val[key];
             if (isString(key) && key.startsWith('@')) {
                 // указание типа
-                if (isObject(data)) {
+                if (isInteger(data)) {
+                    // ссылка
+                    res = this.cache[data];
+                    if (res) {
+                        return res;
+                    } else {
+                        console.error(`Не найден объект с идентификатором ${data}`);
+                        return data;
+                    }
+                }
+                else {
                     // описание объекта
                     let [name, id] = key.substr(1).split('|');
                     let ctor = this._nameToCtor[name];
@@ -182,9 +213,14 @@ class DeserializationContext {
                         // сохраняем в кеше, если указан айдишник
                         if (id) this.cache[id] = res;
 
-                        // десериализуем свойства объекта
-                        for (let key of Object.getOwnPropertyNames(data)) {
-                            res[key] = this.deserialize(data[key]);
+                        if (typeof res.deserialize === 'function') {
+                            // класс реализует интерфейс сериализации
+                            res.deserialize(data);
+                        } else {
+                            // десериализуем свойства объекта
+                            for (let key of Object.getOwnPropertyNames(data)) {
+                                res[key] = this.deserialize(data[key]);
+                            }
                         }
 
                         return res;
@@ -192,15 +228,6 @@ class DeserializationContext {
                         // конструктор не найден
                         console.error(`Конструктор типа "${name}" не найден.`);
                         return val[key];
-                    }
-                } else {
-                    // ссылка
-                    res = this.cache[data];
-                    if (res) {
-                        return res;
-                    } else {
-                        console.error(`Не найден объект с идентификатором ${data}`);
-                        return data;
                     }
                 }
             } else {
@@ -222,6 +249,7 @@ export default class Serializer {
     constructor() {
         this._nameToCtor = [];                  // словарь сопоставлений типов
         this._ctorToName = [];                  // словарь сопоставлений типов
+        this._ignore = [Element];               // список игнорируемых типов
     }
 
     /**
@@ -230,8 +258,24 @@ export default class Serializer {
      * @param {Function} ctor конструктор
      */
     register(alias, ctor) {
+        if (typeof ctor === 'undefined' && typeof alias === 'function') {
+            // передан один аргумент - конструктор
+            ctor = alias;
+            alias = ctor.name;
+        }
+
         this._nameToCtor[alias] = ctor;
         this._ctorToName[ctor] = alias;
+    }
+
+    /**
+     * зарегистрировать тип для игнорирования
+     * @param {Function} ctor конструктор
+     */
+    ignore(ctor) {
+        if (this._ignore.indexOf(ctor) < 0) {
+            this._ignore.push(ctor);
+        }
     }
 
     /**

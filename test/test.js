@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "/";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 2);
+/******/ 	return __webpack_require__(__webpack_require__.s = 3);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -80,16 +80,386 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 /***/ }),
 /* 1 */,
-/* 2 */
+/* 2 */,
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(0);
+module.exports = __webpack_require__(4);
 
 
 /***/ }),
-/* 3 */,
-/* 4 */,
-/* 5 */,
+/* 4 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__src__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__schema__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__color__ = __webpack_require__(8);
+
+
+
+
+//{
+//    console.log('****************************************************************');
+//    console.log('* СЕРИАЛИЗАЦИЯ С ПОМОЩЬЮ ИНТЕРФЕЙСА                            *');
+//    console.log('****************************************************************');
+
+//    // пример: firebrick (#b22222)
+//    let color = Color.fromRGB(178, 34, 34);
+
+//    // создаем сериализатор
+//    let serializer = new Serializer();
+
+//    // регистрируем классы
+//    serializer.register(Color);
+
+//    // выводим в консоль
+//    console.log('Исходный цвет:');
+//    console.log(color);
+
+//    // сериализация
+//    let json = serializer.serialize(color, null, 2);
+//    console.log('JSON:');
+//    console.log(json);
+
+//    // десериализация
+//    let color2 = serializer.deserialize(json);
+//    console.log('Десериализованный цвет:');
+//    console.log(color2);
+//}
+
+{
+    console.log('****************************************************************');
+    console.log('* СЕРИАЛИЗАЦИЯ ВСТРОЕННЫХ ТИПОВ С ПОМОЩЬЮ ИНТЕРФЕЙСА           *');
+    console.log('****************************************************************');
+
+    // пример: вчерашняя дата
+    var source = new Date();
+    source.setDate(source.getDate() - 1);
+
+    Date.prototype.serialize = function () {
+        return this.toISOString();
+    };
+
+    Date.prototype.deserialize = function (val) {
+        var date = new Date(val);
+        this.setDate(date.getDate());
+        this.setTime(date.getTime());
+    };
+
+    // создаем сериализатор
+    var serializer = new __WEBPACK_IMPORTED_MODULE_0__src__["default"]();
+
+    // регистрируем классы
+    serializer.register(Date);
+
+    // выводим в консоль
+    console.log('Исходная дата:');
+    console.log(source);
+
+    // сериализация
+    var json = serializer.serialize(source, null, 2);
+    console.log('JSON:');
+    console.log(json);
+
+    // десериализация
+    var back = serializer.deserialize(json);
+    console.log('Десериализованная дата:');
+    console.log(back);
+}
+
+//{
+//    console.log('****************************************************************');
+//    console.log('* СЕРИАЛИЗАЦИЯ ПРОСТЫХ ОБЪЕКТОВ СО ССЫЛКАМИ                    *');
+//    console.log('****************************************************************');
+
+//    /**
+//     * простой класс через функцию
+//     * @param {stringany} name имя объекта
+//     * @param {MyClass} target целевой объект
+//     */
+//    function MyClass(name, target) {
+//        this.name = name;
+//        this.target = target;
+//    }
+
+//    let a = new MyClass('Объект A');
+//    let b = new MyClass('Объект B', a);
+//    a.target = b;
+
+//    let source = [a, b];
+
+//    // создаем сериализатор
+//    let serializer = new Serializer();
+
+//    // регистрируем классы
+//    serializer.register(MyClass);
+
+//    // выводим в консоль
+//    console.log('Исходные данные:');
+//    console.log(source);
+
+//    // сериализация
+//    let json = serializer.serialize(source, null, 2);
+//    console.log('JSON:');
+//    console.log(json);
+
+//    // десериализация
+//    let back = serializer.deserialize(json);
+//    console.log('Десериализованные данные:');
+//    console.log(back);
+//}
+
+//{
+//    console.log('****************************************************************');
+//    console.log('* СЕРИАЛИЗАЦИЯ СЛОЖНЫХ ОБЪЕКТОВ СО ССЫЛКАМИ                    *');
+//    console.log('****************************************************************');
+
+//    // создаем схему
+//    let start = new Schema.Start();
+//    let input = new Schema.Command('Ввод A, B');
+//    let check = new Schema.If('A > B');
+//    let maxIsA = new Schema.Let('Max', 'A');
+//    let maxIsB = new Schema.Let('Max', 'B');
+//    let output = new Schema.Command('Вывод Max');
+//    let finish = new Schema.Finish();
+
+//    // настраиваем связи
+//    start.addLink(input);
+//    input.addLink(check);
+//    check.addLink(maxIsA, { condition: 'true' });
+//    check.addLink(maxIsB, { condition: 'false' });
+//    maxIsA.addLink(output);
+//    maxIsB.addLink(output);
+//    output.addLink(finish);
+
+//    // собираем объект схемы (массив вершин)
+//    let schema = [
+//        start,
+//        input,
+//        check,
+//        maxIsA,
+//        maxIsB,
+//        output,
+//        finish
+//    ];
+
+//    // выводим в консоль
+//    console.log('Исходная схема:');
+//    console.log(schema);
+
+//    // создаем сериализатор
+//    let serializer = new Serializer();
+
+//    // регистрируем классы
+//    Object.keys(Schema).forEach(key => serializer.register(`Schema.${key}`, Schema[key]));
+
+//    // сериализация
+//    let json = serializer.serialize(schema, null, 2);
+//    console.log('JSON:');
+//    console.log(json);
+
+//    // десериализация
+//    let schema2 = serializer.deserialize(json);
+//    console.log('Десериализованная схема:');
+//    console.log(schema2);
+//}
+
+/***/ }),
+/* 5 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * генерировать UUID
+ * @returns {string} идентификатор
+ */
+function generateUUID() {
+    var d = new Date().getTime();
+    if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+        d += performance.now();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = (d + Math.random() * 16) % 16 | 0;
+        d = Math.floor(d / 16);
+        return (c === 'x' ? r : r & 0x3 | 0x8).toString(16);
+    });
+}
+
+/**
+ * базовый класс связи
+ */
+
+var Link = function Link(target) {
+    _classCallCheck(this, Link);
+
+    this.id = generateUUID();
+    if (typeof target !== 'undefined') this.target = target;
+};
+
+/**
+ * базовый класс вершины
+ */
+
+
+var Node = function () {
+    function Node() {
+        _classCallCheck(this, Node);
+
+        this.id = generateUUID();
+        this.name = 'Node';
+        this.links = {};
+    }
+
+    /**
+     * добавить связь
+     * @param {Node} node вершина
+     * @param {Object} args аргументы
+     */
+
+
+    _createClass(Node, [{
+        key: 'addLink',
+        value: function addLink(node, args) {
+            var link = new Link(node);
+            if (args !== null && (typeof args === 'undefined' ? 'undefined' : _typeof(args)) === 'object') {
+                Object.keys(args).forEach(function (key) {
+                    return link[key] = args[key];
+                });
+            }
+            this.links[link.id] = link;
+        }
+    }]);
+
+    return Node;
+}();
+
+/**
+ * начальная вершина
+ */
+
+
+var Start = function (_Node) {
+    _inherits(Start, _Node);
+
+    function Start() {
+        _classCallCheck(this, Start);
+
+        var _this = _possibleConstructorReturn(this, (Start.__proto__ || Object.getPrototypeOf(Start)).call(this));
+
+        _this.name = 'Start';
+        return _this;
+    }
+
+    return Start;
+}(Node);
+
+/**
+ * конечная вершина
+ */
+
+
+var Finish = function (_Node2) {
+    _inherits(Finish, _Node2);
+
+    function Finish() {
+        _classCallCheck(this, Finish);
+
+        var _this2 = _possibleConstructorReturn(this, (Finish.__proto__ || Object.getPrototypeOf(Finish)).call(this));
+
+        _this2.name = 'Finish';
+        return _this2;
+    }
+
+    return Finish;
+}(Node);
+
+/**
+ * вершина команды
+ */
+
+
+var Command = function (_Node3) {
+    _inherits(Command, _Node3);
+
+    function Command(command) {
+        _classCallCheck(this, Command);
+
+        var _this3 = _possibleConstructorReturn(this, (Command.__proto__ || Object.getPrototypeOf(Command)).call(this));
+
+        _this3.name = 'Command';
+        _this3.command = command;
+        return _this3;
+    }
+
+    return Command;
+}(Node);
+
+/**
+ * вершина присваивания
+ */
+
+
+var Let = function (_Node4) {
+    _inherits(Let, _Node4);
+
+    function Let(variable, expression) {
+        _classCallCheck(this, Let);
+
+        var _this4 = _possibleConstructorReturn(this, (Let.__proto__ || Object.getPrototypeOf(Let)).call(this));
+
+        _this4.name = 'Let';
+        _this4.variable = variable;
+        _this4.expression = expression;
+        return _this4;
+    }
+
+    return Let;
+}(Node);
+
+/**
+ * вершина проверки условия
+ */
+
+
+var If = function (_Node5) {
+    _inherits(If, _Node5);
+
+    function If(condition) {
+        _classCallCheck(this, If);
+
+        var _this5 = _possibleConstructorReturn(this, (If.__proto__ || Object.getPrototypeOf(If)).call(this));
+
+        _this5.name = 'If';
+        _this5.condition = condition;
+        return _this5;
+    }
+
+    return If;
+}(Node);
+
+/* unused harmony default export */ var _unused_webpack_default_export = ({
+    Command: Command,
+    Finish: Finish,
+    If: If,
+    Let: Let,
+    Link: Link,
+    Node: Node,
+    Start: Start
+});
+
+/***/ }),
 /* 6 */,
 /* 7 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
@@ -561,6 +931,87 @@ var Serializer = function () {
 }();
 
 /* harmony default export */ __webpack_exports__["a"] = (Serializer);
+
+/***/ }),
+/* 8 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * класс, описывающий цвет
+ */
+var Color = function () {
+    function Color() {
+        _classCallCheck(this, Color);
+
+        this.r = 0;
+        this.b = 0;
+        this.g = 0;
+    }
+
+    /**
+     * преобразовать в вид #rrggbb
+     * @returns {string} результат
+     */
+
+
+    _createClass(Color, [{
+        key: 'toHex',
+        value: function toHex() {
+            return "#" + (this.r < 16 ? '0' : '') + Math.round(this.r).toString(16) + (this.g < 16 ? '0' : '') + Math.round(this.g).toString(16) + (this.b < 16 ? '0' : '') + Math.round(this.b).toString(16);
+        }
+
+        /**
+         * сериализовать класс в строку
+         * @returns {string} результат
+         */
+
+    }, {
+        key: 'serialize',
+        value: function serialize() {
+            return this.toHex();
+        }
+
+        /**
+         * десериализовать класс из строки
+         * @param {string} value строковое представление
+         */
+
+    }, {
+        key: 'deserialize',
+        value: function deserialize(value) {
+            this.r = parseInt(value.substr(1, 2), 16);
+            this.g = parseInt(value.substr(3, 2), 16);
+            this.b = parseInt(value.substr(5, 2), 16);
+        }
+
+        /**
+         * создать цвет
+         * @param {number} r красный
+         * @param {number} g синий
+         * @param {number} b зеленый
+         * @returns {Color} результат
+         */
+
+    }], [{
+        key: 'fromRGB',
+        value: function fromRGB(r, g, b) {
+            var res = new Color();
+            res.r = r;
+            res.g = g;
+            res.b = b;
+            return res;
+        }
+    }]);
+
+    return Color;
+}();
+
+/* unused harmony default export */ var _unused_webpack_default_export = (Color);
 
 /***/ })
 /******/ ]);
