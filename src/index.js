@@ -1,7 +1,7 @@
 // рекурсивный сериализатор
-import Serializer from './serializer';
+//import Serializer from './serializer';
 
 // плоский сериализатор
-//import Serializer from './serializer-flat';
+import Serializer from './serializer-flat';
 
 export default Serializer;

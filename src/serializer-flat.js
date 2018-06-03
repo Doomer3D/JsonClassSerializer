@@ -78,7 +78,7 @@ class SerializationContext {
      */
     constructor(ser) {
         this.__proto__.__proto__ = ser;
-        this.cache = [];                        // кеш сериализованных объектов
+        this.cache = [];                        // кэш сериализованных объектов
         this.index = 0;                         // идентификатор объекта для ссылки
         this.queue = new Queue();               // очередь
     }
@@ -139,7 +139,7 @@ class SerializationContext {
                     if (!val.__uuid) val.__uuid = ++uuid;
                     let cached = this.cache[val.__uuid];
                     if (cached) {
-                        // объект есть в кеше
+                        // объект есть в кэше
                         if (!cached.index) {
                             // индекс еще не назначен
                             cached.index = ++this.index;
@@ -206,7 +206,7 @@ class DeserializationContext {
      */
     constructor(ser) {
         this.__proto__.__proto__ = ser;
-        this.cache = [];                        // кеш сериализованных объектов
+        this.cache = [];                        // кэш сериализованных объектов
         this.queue = new Queue();               // очередь
     }
 
@@ -267,7 +267,7 @@ class DeserializationContext {
                             // конструктор есть в описании
                             res = new ctor();
 
-                            // сохраняем в кеше, если указан айдишник
+                            // сохраняем в кэше, если указан айдишник
                             if (id) this.cache[id] = res;
 
                             if (typeof res.deserialize === 'function') {

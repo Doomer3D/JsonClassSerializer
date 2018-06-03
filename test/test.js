@@ -69,14 +69,14 @@
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__serializer__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__serializer_flat__ = __webpack_require__(6);
 // рекурсивный сериализатор
-
+//import Serializer from './serializer';
 
 // плоский сериализатор
-//import Serializer from './serializer-flat';
 
-/* harmony default export */ __webpack_exports__["default"] = (__WEBPACK_IMPORTED_MODULE_0__serializer__["a" /* default */]);
+
+/* harmony default export */ __webpack_exports__["default"] = (__WEBPACK_IMPORTED_MODULE_0__serializer_flat__["a" /* default */]);
 
 /***/ }),
 /* 1 */,
@@ -455,8 +455,7 @@ var If = function (_Node5) {
 });
 
 /***/ }),
-/* 6 */,
-/* 7 */
+/* 6 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -500,8 +499,63 @@ function isInteger(value) {
 }
 
 /**
+ * очередь
+ */
+
+var Queue = function () {
+    /**
+     * конструктор
+     */
+    function Queue() {
+        _classCallCheck(this, Queue);
+
+        this._oldIndex = 1;
+        this._newIndex = 1;
+        this._data = {};
+    }
+
+    /**
+     * добавить элемент в очередь
+     * @param {any} item элемент
+     */
+
+
+    _createClass(Queue, [{
+        key: 'enqueue',
+        value: function enqueue(item) {
+            this._data[this._newIndex] = item;
+            this._newIndex++;
+        }
+
+        /**
+         * получить элемент из очереди
+         * @returns {any} элемент
+         */
+
+    }, {
+        key: 'dequeue',
+        value: function dequeue() {
+            var oldIndex = this._oldIndex;
+            var newIndex = this._newIndex;
+
+            if (oldIndex !== newIndex) {
+                var item = this._data[oldIndex];
+                delete this._data[oldIndex];
+                this._oldIndex++;
+                return item;
+            } else {
+                return undefined;
+            }
+        }
+    }]);
+
+    return Queue;
+}();
+
+/**
  * контекст сериализации
  */
+
 
 var SerializationContext = function () {
     /**
@@ -512,8 +566,9 @@ var SerializationContext = function () {
         _classCallCheck(this, SerializationContext);
 
         this.__proto__.__proto__ = ser;
-        this.cache = []; // кеш сериализованных объектов
+        this.cache = []; // кэш сериализованных объектов
         this.index = 0; // идентификатор объекта для ссылки
+        this.queue = new Queue(); // очередь
     }
 
     /**
@@ -526,123 +581,155 @@ var SerializationContext = function () {
     _createClass(SerializationContext, [{
         key: 'serialize',
         value: function serialize(val) {
-            if (Array.isArray(val)) {
-                // массив
-                return this.serializeArray(val);
-            } else if (isObject(val)) {
-                // объект
-                if (this._ignore.some(function (e) {
-                    return val instanceof e;
-                })) {
-                    // игнорируемый тип
-                    return undefined;
-                } else {
-                    return this.serializeObject(val);
-                }
-            } else {
-                // прочие значения
-                return val;
-            }
-        }
+            var res = void 0;
 
-        /**
-         * сериализовать массив
-         * @param {Array} val массив
-         * @returns {Array} результат
-         */
+            // добавляем в очередь исходный объект
+            this.addQueue(val, function (e) {
+                return res = e;
+            });
 
-    }, {
-        key: 'serializeArray',
-        value: function serializeArray(val) {
-            var res = [];
-            var _iteratorNormalCompletion = true;
-            var _didIteratorError = false;
-            var _iteratorError = undefined;
-
-            try {
-                for (var _iterator = val[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                    var item = _step.value;
-
-                    var e = this.serialize(item);
-                    if (typeof e !== 'undefined') res.push(e);
-                }
-            } catch (err) {
-                _didIteratorError = true;
-                _iteratorError = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion && _iterator.return) {
-                        _iterator.return();
-                    }
-                } finally {
-                    if (_didIteratorError) {
-                        throw _iteratorError;
-                    }
-                }
+            // главный цикл
+            for (var item = this.queue.dequeue(); item; item = this.queue.dequeue()) {
+                this.processItem(item);
             }
 
             return res;
         }
 
         /**
-         * сериализовать объект
-         * @param {Object} val объект
-         * @returns {Object} результат
+         * добавить в очередь значение для обработки
+         * @param {any} val значение
+         * @param {Function} callback функция обработки
          */
 
     }, {
-        key: 'serializeObject',
-        value: function serializeObject(val) {
-            var name = this._ctorToName[val.constructor];
-            if (name) {
-                // зарегистрированный для сериализации тип
-                if (!val.__uuid) val.__uuid = ++uuid;
-                var cached = this.cache[val.__uuid];
-                if (cached) {
-                    // объект есть в кеше
-                    if (!cached.index) {
-                        // индекс еще не назначен
-                        cached.index = ++this.index;
-                        var key = Object.keys(cached.ref)[0];
-                        var old = cached.ref[key];
-                        cached.ref['@' + name + '|' + cached.index] = old;
-                        delete cached.ref[key];
+        key: 'addQueue',
+        value: function addQueue(val, callback) {
+            this.queue.enqueue({ val: val, callback: callback });
+        }
+
+        /**
+         * обработать элемент очереди
+         * @param {{val:any, callback:Function}} item элемент очереди
+         */
+
+    }, {
+        key: 'processItem',
+        value: function processItem(item) {
+            var _this = this;
+
+            var _ref = [item.val, item.callback],
+                val = _ref[0],
+                callback = _ref[1];
+
+
+            if (Array.isArray(val)) {
+                (function () {
+                    // массив
+                    var res = [];
+                    var _iteratorNormalCompletion = true;
+                    var _didIteratorError = false;
+                    var _iteratorError = undefined;
+
+                    try {
+                        for (var _iterator = val[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                            var _item = _step.value;
+
+                            _this.addQueue(_item, function (e) {
+                                if (typeof e !== 'undefined') res.push(e);
+                            });
+                        }
+                    } catch (err) {
+                        _didIteratorError = true;
+                        _iteratorError = err;
+                    } finally {
+                        try {
+                            if (!_iteratorNormalCompletion && _iterator.return) {
+                                _iterator.return();
+                            }
+                        } finally {
+                            if (_didIteratorError) {
+                                throw _iteratorError;
+                            }
+                        }
                     }
 
-                    // возвращаем ссылку на объект
-                    return _defineProperty({}, '@' + name, cached.index);
+                    callback(res);
+                })();
+            } else if (isObject(val)) {
+                // объект
+                if (this._ignore.some(function (e) {
+                    return val instanceof e;
+                })) {
+                    // игнорируемый тип
+                    callback(undefined);
                 } else {
-                    var res = void 0;
-                    var _cached = { ref: _defineProperty({}, '@' + name, {}) };
-                    this.cache[val.__uuid] = _cached;
+                    var name = this._ctorToName[val.constructor];
+                    if (name) {
+                        // зарегистрированный для сериализации тип
+                        if (!val.__uuid) val.__uuid = ++uuid;
+                        var cached = this.cache[val.__uuid];
+                        if (cached) {
+                            // объект есть в кэше
+                            if (!cached.index) {
+                                // индекс еще не назначен
+                                cached.index = ++this.index;
+                                var key = Object.keys(cached.ref)[0];
+                                var old = cached.ref[key];
+                                cached.ref['@' + name + '|' + cached.index] = old;
+                                delete cached.ref[key];
+                            }
 
-                    if (typeof val.serialize === 'function') {
-                        // класс реализует интерфейс сериализации
-                        res = val.serialize();
+                            // возвращаем ссылку на объект
+                            callback(_defineProperty({}, '@' + name, cached.index));
+                        } else {
+                            var res = void 0;
+                            if (typeof val.serialize === 'function') {
+                                // класс реализует интерфейс сериализации
+                                res = val.serialize();
+                            } else {
+                                // обычная сериализация
+                                res = this.serializeObjectInner(val);
+                            }
+
+                            var _cached = { ref: _defineProperty({}, '@' + name, res) };
+                            this.cache[val.__uuid] = _cached;
+
+                            callback(_cached.ref);
+                        }
                     } else {
-                        // обычная сериализация
-                        res = this.serializeObjectInner(val);
+                        var _res = this.serializeObjectInner(val);
+                        callback(_res);
                     }
-                    _cached.ref[Object.keys(_cached.ref)[0]] = res;
-
-                    return _cached.ref;
                 }
             } else {
-                // простой объект
-                return this.serializeObjectInner(val);
+                // прочие значения
+                callback(val);
             }
         }
 
         /**
          * сериализовать объект
          * @param {Object} val объект
-         * @returns {Object} результат
+         * @returns {Object} целевой объект
          */
 
     }, {
         key: 'serializeObjectInner',
         value: function serializeObjectInner(val) {
+            var _this2 = this;
+
             var res = {};
+
+            var _loop = function _loop(key) {
+                if (!(isString(key) && key.startsWith('__'))) {
+                    // игнорируем поля, начинающиеся на два символа подчеркивания
+                    _this2.addQueue(val[key], function (e) {
+                        if (typeof e !== 'undefined') res[key] = e;
+                    });
+                }
+            };
+
             var _iteratorNormalCompletion2 = true;
             var _didIteratorError2 = false;
             var _iteratorError2 = undefined;
@@ -651,10 +738,7 @@ var SerializationContext = function () {
                 for (var _iterator2 = Object.getOwnPropertyNames(val)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
                     var key = _step2.value;
 
-                    if (!(isString(key) && key.startsWith('__'))) {
-                        // игнорируем поля, начинающиеся на два символа подчеркивания
-                        res[key] = this.serialize(val[key]);
-                    }
+                    _loop(key);
                 }
             } catch (err) {
                 _didIteratorError2 = true;
@@ -692,7 +776,8 @@ var DeserializationContext = function () {
         _classCallCheck(this, DeserializationContext);
 
         this.__proto__.__proto__ = ser;
-        this.cache = []; // кеш сериализованных объектов
+        this.cache = []; // кэш сериализованных объектов
+        this.queue = new Queue(); // очередь
     }
 
     /**
@@ -705,138 +790,194 @@ var DeserializationContext = function () {
     _createClass(DeserializationContext, [{
         key: 'deserialize',
         value: function deserialize(val) {
-            if (Array.isArray(val)) {
-                // массив
-                return this.deserializeArray(val);
-            } else if (isObject(val)) {
-                // объект
-                return this.deserializeObject(val);
-            } else {
-                // прочие значения
-                return val;
-            }
-        }
+            var res = void 0;
 
-        /**
-         * десериализовать объект
-         * @param {Object} val объект
-         * @returns {Object} результат
-         */
-
-    }, {
-        key: 'deserializeArray',
-        value: function deserializeArray(val) {
-            var _this = this;
-
-            return val.map(function (item) {
-                return _this.deserialize(item);
+            // добавляем в очередь исходный объект
+            this.addQueue(val, function (e) {
+                return res = e;
             });
-        }
 
-        /**
-         * десериализовать массив
-         * @param {Array} val массив
-         * @returns {Array} результат
-         */
-
-    }, {
-        key: 'deserializeObject',
-        value: function deserializeObject(val) {
-            var res = {};
-            var _iteratorNormalCompletion3 = true;
-            var _didIteratorError3 = false;
-            var _iteratorError3 = undefined;
-
-            try {
-                for (var _iterator3 = Object.getOwnPropertyNames(val)[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-                    var key = _step3.value;
-
-                    var data = val[key];
-                    if (isString(key) && key.startsWith('@')) {
-                        // указание типа
-                        if (isInteger(data)) {
-                            // ссылка
-                            res = this.cache[data];
-                            if (res) {
-                                return res;
-                            } else {
-                                console.error('\u041D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D \u043E\u0431\u044A\u0435\u043A\u0442 \u0441 \u0438\u0434\u0435\u043D\u0442\u0438\u0444\u0438\u043A\u0430\u0442\u043E\u0440\u043E\u043C ' + data);
-                                return data;
-                            }
-                        } else {
-                            // описание объекта
-                            var _key$substr$split = key.substr(1).split('|'),
-                                _key$substr$split2 = _slicedToArray(_key$substr$split, 2),
-                                name = _key$substr$split2[0],
-                                id = _key$substr$split2[1];
-
-                            var ctor = this._nameToCtor[name];
-                            if (ctor) {
-                                // конструктор есть в описании
-                                res = new ctor();
-
-                                // сохраняем в кеше, если указан айдишник
-                                if (id) this.cache[id] = res;
-
-                                if (typeof res.deserialize === 'function') {
-                                    // класс реализует интерфейс сериализации
-                                    res.deserialize(data);
-                                } else {
-                                    // десериализуем свойства объекта
-                                    var _iteratorNormalCompletion4 = true;
-                                    var _didIteratorError4 = false;
-                                    var _iteratorError4 = undefined;
-
-                                    try {
-                                        for (var _iterator4 = Object.getOwnPropertyNames(data)[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-                                            var _key = _step4.value;
-
-                                            res[_key] = this.deserialize(data[_key]);
-                                        }
-                                    } catch (err) {
-                                        _didIteratorError4 = true;
-                                        _iteratorError4 = err;
-                                    } finally {
-                                        try {
-                                            if (!_iteratorNormalCompletion4 && _iterator4.return) {
-                                                _iterator4.return();
-                                            }
-                                        } finally {
-                                            if (_didIteratorError4) {
-                                                throw _iteratorError4;
-                                            }
-                                        }
-                                    }
-                                }
-
-                                return res;
-                            } else {
-                                // конструктор не найден
-                                console.error('\u041A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0442\u043E\u0440 \u0442\u0438\u043F\u0430 "' + name + '" \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D.');
-                                return val[key];
-                            }
-                        }
-                    } else {
-                        // простое поле
-                        res[key] = this.deserialize(val[key]);
-                    }
-                }
-            } catch (err) {
-                _didIteratorError3 = true;
-                _iteratorError3 = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion3 && _iterator3.return) {
-                        _iterator3.return();
-                    }
-                } finally {
-                    if (_didIteratorError3) {
-                        throw _iteratorError3;
-                    }
-                }
+            // главный цикл
+            for (var item = this.queue.dequeue(); item; item = this.queue.dequeue()) {
+                this.processItem(item);
             }
 
             return res;
+        }
+
+        /**
+         * обработать элемент очереди
+         * @param {{val:any, callback:Function}} item элемент очереди
+         */
+
+    }, {
+        key: 'processItem',
+        value: function processItem(item) {
+            var _this3 = this;
+
+            var _ref3 = [item.val, item.callback],
+                val = _ref3[0],
+                callback = _ref3[1];
+
+
+            if (Array.isArray(val)) {
+                (function () {
+                    // массив
+                    var res = [];
+                    var _iteratorNormalCompletion3 = true;
+                    var _didIteratorError3 = false;
+                    var _iteratorError3 = undefined;
+
+                    try {
+                        for (var _iterator3 = val[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+                            var _item2 = _step3.value;
+
+                            _this3.addQueue(_item2, function (e) {
+                                return res.push(e);
+                            });
+                        }
+                    } catch (err) {
+                        _didIteratorError3 = true;
+                        _iteratorError3 = err;
+                    } finally {
+                        try {
+                            if (!_iteratorNormalCompletion3 && _iterator3.return) {
+                                _iterator3.return();
+                            }
+                        } finally {
+                            if (_didIteratorError3) {
+                                throw _iteratorError3;
+                            }
+                        }
+                    }
+
+                    callback(res);
+                })();
+            } else if (isObject(val)) {
+                (function () {
+                    // объект
+                    var res = {};
+
+                    var _loop2 = function _loop2(key) {
+                        var data = val[key];
+                        if (isString(key) && key.startsWith('@')) {
+                            // указание типа
+                            if (isInteger(data)) {
+                                // ссылка
+                                res = _this3.cache[data];
+                                if (!res) {
+                                    console.error('\u041D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D \u043E\u0431\u044A\u0435\u043A\u0442 \u0441 \u0438\u0434\u0435\u043D\u0442\u0438\u0444\u0438\u043A\u0430\u0442\u043E\u0440\u043E\u043C ' + data);
+                                    res = data;
+                                }
+                                return 'break';
+                            } else {
+                                // описание объекта
+                                var _key$substr$split = key.substr(1).split('|'),
+                                    _key$substr$split2 = _slicedToArray(_key$substr$split, 2),
+                                    name = _key$substr$split2[0],
+                                    id = _key$substr$split2[1];
+
+                                var ctor = _this3._nameToCtor[name];
+                                if (ctor) {
+                                    // конструктор есть в описании
+                                    res = new ctor();
+
+                                    // сохраняем в кэше, если указан айдишник
+                                    if (id) _this3.cache[id] = res;
+
+                                    if (typeof res.deserialize === 'function') {
+                                        // класс реализует интерфейс сериализации
+                                        res.deserialize(data);
+                                    } else {
+                                        var _loop3 = function _loop3(_key) {
+                                            _this3.addQueue(data[_key], function (e) {
+                                                return res[_key] = e;
+                                            });
+                                        };
+
+                                        // десериализуем свойства объекта
+                                        var _iteratorNormalCompletion5 = true;
+                                        var _didIteratorError5 = false;
+                                        var _iteratorError5 = undefined;
+
+                                        try {
+                                            for (var _iterator5 = Object.getOwnPropertyNames(data)[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+                                                var _key = _step5.value;
+
+                                                _loop3(_key);
+                                            }
+                                        } catch (err) {
+                                            _didIteratorError5 = true;
+                                            _iteratorError5 = err;
+                                        } finally {
+                                            try {
+                                                if (!_iteratorNormalCompletion5 && _iterator5.return) {
+                                                    _iterator5.return();
+                                                }
+                                            } finally {
+                                                if (_didIteratorError5) {
+                                                    throw _iteratorError5;
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    return 'break';
+                                }
+                            }
+                        } else {
+                            // простое поле
+                            _this3.addQueue(val[key], function (e) {
+                                return res[key] = e;
+                            });
+                        }
+                    };
+
+                    var _iteratorNormalCompletion4 = true;
+                    var _didIteratorError4 = false;
+                    var _iteratorError4 = undefined;
+
+                    try {
+                        for (var _iterator4 = Object.getOwnPropertyNames(val)[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+                            var key = _step4.value;
+
+                            var _ret5 = _loop2(key);
+
+                            if (_ret5 === 'break') break;
+                        }
+                    } catch (err) {
+                        _didIteratorError4 = true;
+                        _iteratorError4 = err;
+                    } finally {
+                        try {
+                            if (!_iteratorNormalCompletion4 && _iterator4.return) {
+                                _iterator4.return();
+                            }
+                        } finally {
+                            if (_didIteratorError4) {
+                                throw _iteratorError4;
+                            }
+                        }
+                    }
+
+                    callback(res);
+                })();
+            } else {
+                // прочие значения
+                callback(val);
+            }
+        }
+
+        /**
+         * добавить в очередь значение для обработки
+         * @param {any} val значение
+         * @param {Function} callback функция обработки
+         */
+
+    }, {
+        key: 'addQueue',
+        value: function addQueue(val, callback) {
+            this.queue.enqueue({ val: val, callback: callback });
         }
     }]);
 
@@ -928,6 +1069,7 @@ var Serializer = function () {
 /* harmony default export */ __webpack_exports__["a"] = (Serializer);
 
 /***/ }),
+/* 7 */,
 /* 8 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
