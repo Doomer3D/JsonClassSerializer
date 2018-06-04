@@ -1,6 +1,8 @@
 # JSON Class Serializer
 JSON Class Serializer - это библиотека для сериализации объектов JavaScript в формат JSON с сохранением информации о типах (классах) и связях между объектами.
 
+[Статья на Хабре](https://habr.com/post/413113/)
+
 ## Использование
 
 ```javascript
